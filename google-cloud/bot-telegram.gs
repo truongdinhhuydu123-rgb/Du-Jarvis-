@@ -11,6 +11,9 @@
 //   4. Mở URL ứng dụng web kèm  ?matkhau=<MAT_KHAU>&viec=caidat  để nối Telegram và hẹn bản tin.
 // Chỉ chat TELEGRAM_CHAT_ID dùng được bot. Người lạ nhắn thì bot chỉ báo chat ID của họ.
 
+// Số phiên bản: mở URL ứng dụng web (không thêm gì) sẽ thấy số này, để biết Google đang chạy bản nào.
+const PHIEN_BAN = "2026-10-23.3";
+
 const CAU_HINH = {
   TELEGRAM_BOT_TOKEN: "DAN-TOKEN-BOT-TELEGRAM",
   TELEGRAM_CHAT_ID: "DAN-CHAT-ID-CUA-BAN",
@@ -91,7 +94,7 @@ function doPost(e) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.matkhau !== CAU_HINH.MAT_KHAU || !p.viec) {
-    return traJson({ ok: true, tin: "Bot Du / Steve đang chạy trên máy chủ Google." });
+    return traJson({ ok: true, tin: "Bot Du / Steve đang chạy trên máy chủ Google.", phien_ban: PHIEN_BAN });
   }
   if (p.viec === "caidat") return traJson(caiDat());
   if (p.viec === "kiemtra") return traJson(kiemTra());
@@ -137,7 +140,7 @@ function caiDat() {
 
 // Thử từng nguồn dữ liệu từ máy chủ Google (không gửi gì cho Telegram).
 function kiemTra() {
-  const out = {};
+  const out = { phien_ban: { ok: true, mau: PHIEN_BAN } };
   const thu = function (ten, fn) {
     const t = Date.now();
     try {
