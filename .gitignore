@@ -1,0 +1,20 @@
+# Key riêng: KHÔNG BAO GIỜ đưa lên GitHub (repo công khai)
+.env
+# Bản Apps Script đã điền mật khẩu / token / key
+google-calendar/*DAN-VAO*
+google-cloud/*DAN-VAO*
+
+# Thư viện và bộ nghe: lần đầu chạy "Start Tom.bat" tự cài / tự tải lại
+.venv/
+models/
+
+# Dữ liệu trên máy: tự học, nhật ký, giọng lưu tạm, hồ sơ Chrome có đăng nhập
+.cache/
+
+__pycache__/
+*.pyc
+.DS_Store
+
+# Thông tin cá nhân: cài đặt riêng, ảnh nền riêng
+config_rieng.py
+hud/background.*

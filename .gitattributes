@@ -1,0 +1,8 @@
+* text=auto
+# File .bat phải xuống dòng kiểu Windows, không thì "goto"/"call :nhãn" chạy sai
+*.bat text eol=crlf
+*.cmd text eol=crlf
+# File của Mac phải xuống dòng kiểu Mac/Linux
+*.command text eol=lf
+*.wav binary
+*.webp binary

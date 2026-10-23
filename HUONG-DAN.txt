@@ -1,0 +1,156 @@
+DU / STEVE - TRỢ LÝ GIỌNG NÓI KIỂU JARVIS (Windows + Mac)
+==========================================================
+
+BẬT TRỢ LÝ
+  Cách nhanh: gõ  run  rồi Enter (trong cửa sổ lệnh, PowerShell, hoặc Win + R).
+    Lệnh "run" được tạo bằng file "Tao lenh run.bat" (chạy một lần; chuyển thư mục
+    trợ lý sang chỗ khác thì chạy lại).
+  Hoặc bấm đúp "Start Tom.bat" (Mac: "Start Tom.command").
+
+  Bản đầy đủ đã kèm sẵn thư viện (.venv) và bộ nghe giọng nói (models).
+  Zip có khoảng 13.000 file: chờ giải nén XONG HẲN rồi mới chạy.
+  Máy khác hoặc thư viện bị hỏng: lần đầu chạy tự cài lại (~300 MB), cần có mạng,
+  mất vài phút. Windows cần có Python (https://www.python.org, bản 3.11 trở lên).
+
+GỌI VÀ RA LỆNH
+  Gọi tên ở đầu câu: "Du ơi", "Này Du", "Hey Du", "Steve", "Steve ơi", "Hey Steve".
+  ("Du" một mình không gọi được, để câu như "Dù sao thì..." không đánh thức nhầm.)
+  Nói tiếng Việt thì trả lời tiếng Việt; nói tiếng Anh thì trả lời tiếng Anh.
+  Không nói được? Gõ lệnh vào ô dưới màn hình HUD (gõ phím bất kỳ là chữ tự vào ô),
+  hoặc gõ vào cửa sổ đen, rồi Enter. Gõ thì không cần gọi tên, không dấu cũng được.
+
+  Ví dụ:
+    "Du ơi, mấy giờ rồi?"               "Hey Steve, what time is it?"
+    "Steve ơi, mở nhạc remix"           "Hey Du, play some lofi"  (mở YouTube tìm sẵn)
+    "Du ơi, bật nhạc Lạc Trôi"          "Steve, play Shape of You" (phát luôn)
+    "Du ơi, mở Excel / Zalo / Word"     "Steve, open TradingView"
+    "Du ơi, tìm file báo cáo tháng 10"  "Hey Steve, find my file invoice"
+    "Steve ơi, giá vàng và Nasdaq bây giờ thế nào?"
+    "Du ơi, tuần này có tin kinh tế Mỹ nào quan trọng?"
+    "Du ơi, CPI tháng 9 của Mỹ ra bao nhiêu, so với dự báo?"
+    "Steve, how could today's PPI affect gold?"
+    "Du ơi, mở biểu đồ vàng trên TradingView"
+  Trả lời xong, trong 5 giây nói tiếp được luôn, không cần gọi tên lại.
+
+TẮT TRỢ LÝ
+  - Nói hoặc gõ  turn off  (không cần gọi tên; cả câu chỉ có "turn off").
+  - Hoặc "tắt Du", "tắt Steve", "tắt Tom", "tắt trợ lý", "tạm biệt", "goodbye".
+  - Gõ  turn off  trong PowerShell / cửa sổ lệnh bất kỳ (sau khi chạy "Tao lenh run.bat"),
+    hoặc bấm đúp file "Tat tro ly.bat". Trợ lý nói lời chào rồi tắt, đóng luôn màn hình HUD.
+  - Hoặc Ctrl+C ở cửa sổ đen.
+  ("turn off the music", "tắt dữ liệu"... không làm tắt trợ lý.)
+
+NGHE VÀ TỰ HỌC
+  Nghe 2 bước: bộ nghe rất nhỏ trên máy nghe mọi câu (~0,5 giây) chỉ để nhận tên gọi; câu
+  gọi trợ lý được Whisper bản lớn của Groq nghe kỹ lại (~1-2 giây, chuẩn hơn hẳn). Câu không
+  gọi trợ lý không rời khỏi máy và không bị ghi vào nhật ký. Groq lỗi thì máy tự nghe thay.
+  Cần key Groq miễn phí trong .env (GROQ_API_KEY=..., lấy ở https://console.groq.com/keys).
+  Nói xong cứ ngừng tự nhiên: máy chờ ~1 giây (câu dài chờ lâu hơn) nên không bị cắt ngang.
+  Chống nghe nhầm: bộ nghe nhỏ hay nghe tiếng quạt, TV, người xung quanh thành "Du ơi...".
+  Groq nghe kỹ là người quyết định cuối: Groq thấy chỉ có tiếng ồn, hoặc nghe ra câu khác hẳn
+  (vd "Tối nay ăn gì" chứ không phải "Du ơi"), thì trợ lý bỏ qua, không trả lời bậy.
+  Trong 5 giây nói tiếp sau khi trợ lý trả lời cũng vậy: tiếng ồn không bị gửi cho AI nữa.
+
+  Tự học (lưu ở .cache/hoc.json, ô "HỌC" trên HUD đếm số thứ đã học):
+    - Từ Groq: chỗ máy hay nghe nhầm (gặp 3 lần) được ghi nhớ để máy tự sửa.
+    - Từ bạn: nói xong mà máy hiểu sai, gõ lại câu đúng trong 40 giây là máy học luôn.
+    - Bạn dạy:  "sửa chữ gia lô thành Zalo"   "học: tiu ơi => Steve ơi"
+                "quên chữ gia lô"   "đã học được gì" / "what have you learned"
+    - Cách gọi tên: gọi mà không được (vd máy nghe "Tiu ơi, mở YouTube"), gọi lại đúng ngay
+      sau đó với cùng lệnh thì "Tiu ơi" được học thành một cách gọi Steve.
+    - Từ bạn hay dùng (XAUUSD, TradingView...) và độ to giọng bạn: tự dùng để nghe đúng hơn.
+  Xoá file .cache/hoc.json = học lại từ đầu.
+
+MÀN HÌNH HUD
+  Mở toàn màn hình trong Chrome. Thoát toàn màn hình: F11.
+  Bên trái: bảng giá (XAUUSD, US100, BTC, ETH, DXY, US10Y, EURUSD) và tin Mỹ
+  quan trọng sắp ra (giờ Việt Nam, đếm ngược, dự báo, kỳ trước).
+  Nút quanh vòng tròn và nút thể loại nhạc bấm được như ra lệnh bằng giọng.
+
+TRÌNH DUYỆT MỘT TAB
+  Mọi trang trợ lý mở (YouTube, Facebook, Google, TradingView...) hiện trong đúng
+  MỘT tab của một cửa sổ Chrome riêng, không mở thêm tab làm nặng máy.
+  Cửa sổ này dùng hồ sơ Chrome riêng: lần đầu hãy đăng nhập YouTube, Facebook
+  trong đó một lần là lần sau nhớ. Không thích thì đặt SINGLE_TAB = False trong config.py.
+
+HỎI ĐÁP AI VÀ DỮ LIỆU THẬT
+  Dán key vào file .env (dòng GEMINI_API_KEY=). Key Gemini miễn phí:
+  https://aistudio.google.com/apikey (nên dùng Gmail cá nhân; mail trường hay bị chặn).
+  AI tự lấy dữ liệu thật khi cần: giá (Yahoo Finance, Binance), lịch tin kinh tế
+  (Forex Factory), tin tức (CNBC, InvestingLive, Investing, Google News), tìm và đọc web.
+  XAUUSD lấy theo PAXG trên Binance: bám sát giá vàng giao ngay nhưng có thể lệch vài
+  USD so với sàn của bạn. US100 lấy theo hợp đồng tương lai Nasdaq (NQ=F).
+  Chưa có key, hoặc key lỗi: hỏi gì cũng mở Google tìm kiếm câu đó.
+  Gói Gemini miễn phí: Google có thể dùng câu bạn hỏi để cải thiện sản phẩm.
+
+  Câu dễ trả lời nhanh, câu khó nghiên cứu rồi mới trả lời (ANSWER_MODE trong config.py):
+    - Câu dễ (giá, giờ, lịch tin, kiến thức phổ thông): trả lời ngay, ~1-4 giây.
+    - Câu khó (phân tích, so sánh, tại sao, dự báo, nhận định, kịch bản, có nên mua/bán,
+      câu dài...): trợ lý nói "Câu này cần tra cứu kỹ. Chờ tôi vài giây.", HUD hiện
+      "ĐANG NGHIÊN CỨU NHIỀU NGUỒN", máy tra cùng lúc web + tin tức + giá + lịch tin, đọc
+      2-3 bài gốc, rồi AI nghĩ kỹ và trả lời có số liệu, nguồn, kịch bản (~8-15 giây).
+    - Câu tưởng dễ mà AI thấy cần tra thêm thì AI tự chuyển sang nghiên cứu.
+    - Muốn trả lời nhanh câu khó: thêm "ngắn gọn" / "nói nhanh" / "quick" vào câu hỏi.
+  AI chỉ phân tích và nêu kịch bản, rủi ro; quyết định giao dịch là của bạn.
+
+TELEGRAM (nhắn từ điện thoại)
+  Chạy ngầm (khuyên dùng): bấm đúp "Chay ngam Telegram.bat" MỘT LẦN. Từ đó bot tự chạy ngầm
+  (không cửa sổ) mỗi khi bật máy, không cần mở trợ lý. Gỡ: "Tat chay ngam Telegram.bat".
+  (Avast có thể chặn file .bat tạo lối tắt khởi động: báo "Access is denied". Khi đó tự tạo lối
+  tắt tới .venv\Scripts\pythonw.exe với tham số  jarvis.py --telegram  trong thư mục Startup
+  — Win + R, gõ shell:startup.)
+  Không chạy ngầm thì bot chỉ chạy khi trợ lý đang bật (gõ run), hoặc  run --telegram.
+  Máy tính phải đang bật (không ngủ) thì bot mới trả lời. Tin nhắn lúc máy tắt/ngủ được trả lời
+  khi máy bật lại (trong 48 giờ), ghi chú "tối nay", "mai" tính theo lúc bạn nhắn; nhiều lần
+  "cập nhật" đang chờ chỉ làm một bản tin. Mỗi sáng 7:30 tự gửi bản tin (BAN_TIN_TU_DONG).
+  Chỉ chat của bạn (TELEGRAM_CHAT_ID trong .env) dùng được bot; người lạ nhắn thì bot chỉ báo
+  chat ID của họ, không làm gì khác. Bot đang chạy ngầm thì gõ run không chạy thêm bot thứ hai.
+    /capnhat  (hoặc "cập nhật", "bản tin", "có gì mới"): bản tin ~15 giây gồm thị trường
+              (XAUUSD, US100, BTC, DXY, US10Y), giá vàng SJC/PNJ và chênh với thế giới, lãi
+              suất (Fed, ngân hàng Việt Nam), luật & chính sách kinh doanh, tin hot, tin Mỹ sắp ra.
+    /note mai 9h họp anh Nam   (hoặc "ghi chú ...", "nhắc tôi ...", /lich ...): lên Google Calendar.
+    Câu khác: hỏi như khi nói, vd "giá vàng SJC hôm nay", "phân tích XAUUSD tuần này".
+  Nói với trợ lý cũng ghi lịch được: "Du ơi, nhắc tôi 3 giờ chiều mai gọi khách".
+  Nguồn tin bản tin: chỉnh BAN_TIN trong config.py.
+
+BOT TELEGRAM TRÊN MÁY CHỦ GOOGLE (máy tính tắt vẫn trả lời, khuyên dùng)
+  Bot chạy 24/7 miễn phí bằng Google Apps Script trên tài khoản Google của bạn: bản tin, giá
+  vàng, lãi suất, tin tức, hỏi đáp AI, ghi chú thẳng vào Google Calendar, bản tin 7:30 mỗi sáng.
+  Cài một lần (~3 phút):
+    1. Mở https://script.google.com/create (Gmail có lịch muốn dùng). Đặt tên dự án, vd Du-Steve Bot.
+    2. Xoá chữ có sẵn, dán toàn bộ google-cloud\bot-telegram-DAN-VAO.gs (bản đã điền sẵn token,
+       key, mật khẩu của bạn; không có file này thì dán bot-telegram.gs rồi tự điền CAU_HINH).
+       Bấm Ctrl+S. Kiểm tra: ô chọn hàm cạnh nút ▷ Chạy phải có doPost, doGet.
+    3. Triển khai → Tùy chọn triển khai mới → bánh răng → Ứng dụng web. Thực thi với tư cách: Tôi.
+       Người có quyền truy cập: Bất kỳ ai. Triển khai → Cấp quyền (Nâng cao → Đi tới ... → Cho phép).
+    4. Mở URL ứng dụng web, thêm vào cuối  ?matkhau=<MAT_KHAU>&viec=caidat  (MAT_KHAU ở đầu file
+       đã dán). Thấy "ok": true là Telegram đã nối vào bot Google và đã hẹn bản tin mỗi sáng.
+       Kiểm tra các nguồn dữ liệu:  ?matkhau=<MAT_KHAU>&viec=kiemtra
+  Sửa code sau này: dán bản mới, Ctrl+S, rồi Triển khai → Quản lý các bản triển khai → ✏️ →
+  Phiên bản: Phiên bản mới → Triển khai (URL giữ nguyên).
+  Khi bot chạy trên Google, bot trên máy tính tự nhường (không chạy nữa). Muốn quay về bot trên
+  máy: mở https://api.telegram.org/bot<TOKEN>/deleteWebhook rồi bật "Chay ngam Telegram.bat".
+
+GOOGLE CALENDAR TỰ ĐỘNG (cài một lần, ~3 phút)
+  Chưa cài thì trợ lý vẫn ghi lịch được: gửi (Telegram) hoặc mở (trên máy) trang Google
+  Calendar điền sẵn, bạn bấm Lưu. Muốn tự lưu luôn:
+    1. Mở https://script.google.com/create (đăng nhập Gmail có lịch muốn dùng).
+    2. Xoá chữ có sẵn, dán toàn bộ file google-calendar\lich-DAN-VAO-APPS-SCRIPT.gs (bản đã điền
+       sẵn mật khẩu của bạn; không có file này thì dùng lich.gs và tự đổi MAT_KHAU = GCAL_SECRET
+       trong .env). Bấm biểu tượng Lưu.
+    3. Triển khai (Deploy) → Tùy chọn triển khai mới (New deployment) → bánh răng → Ứng dụng
+       web (Web app). Thực thi với tư cách: Tôi. Người có quyền truy cập: Bất kỳ ai. Bấm Triển
+       khai → Cấp quyền truy cập → chọn tài khoản → Nâng cao → Đi tới ... (không an toàn) → Cho
+       phép. (Google cảnh báo vì script do bạn tự tạo, chưa qua kiểm duyệt; script chỉ thêm sự
+       kiện vào lịch của bạn.)
+    4. Chép URL ứng dụng web (đuôi /exec) vào .env: GCAL_WEBHOOK_URL=... rồi bật lại trợ lý.
+  Không có mật khẩu đúng thì không ai thêm được gì vào lịch của bạn, dù biết URL.
+
+TUỲ CHỈNH
+  Mọi thứ nằm trong config.py: tên gọi, cách gọi, ngôn ngữ, giọng, lệnh nhanh,
+  thể loại nhạc, bảng giá, lĩnh vực AI giỏi (FOCUS), nút trên HUD...
+  Nghe sai hoặc không nghe: chỉnh SPEECH_LEVEL trong config.py.
+
+LƯU Ý
+  File .env chứa key riêng của bạn. ĐỪNG gửi file .env (hay cả thư mục này)
+  cho người khác.

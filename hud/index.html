@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DU · STEVE HUD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #03070a;
+    --cyan: #1fd2ff;
+    --cyan-soft: rgba(31, 210, 255, .35);
+    --text: #d4f1ff;
+    --muted: #6d8a97;
+    --line: rgba(150, 215, 255, .16);
+    --up: #3ee08f;
+    --down: #ff5d6c;
+    --amber: #ffcf7a;
+    --glass: rgba(6, 18, 26, .62);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif;
+    user-select: none; cursor: default;
+  }
+  #bg {
+    position: fixed; inset: -4%; background: center / cover no-repeat;
+    opacity: 0; transition: opacity 1.2s; filter: saturate(.5) brightness(.8);
+  }
+  #bg.on { opacity: .2; }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(20, 110, 150, .14) 0%, transparent 52%),
+      radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .7) 100%),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 3px);
+  }
+  canvas { position: fixed; inset: 0; }
+
+  /* ---------- thanh trên ---------- */
+  .top {
+    position: fixed; top: 0; left: 0; right: 0; height: 46px; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    border-bottom: 1px solid var(--line); background: linear-gradient(rgba(0, 0, 0, .65), rgba(0, 0, 0, .1));
+    font-size: 12.5px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase;
+  }
+  .top b { color: var(--text); font-weight: 500; }
+  .top .num { font-family: Orbitron, monospace; font-size: 12px; color: var(--text); }
+  .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 10px;
+    background: var(--cyan); box-shadow: 0 0 10px var(--cyan); vertical-align: 1px;
+  }
+  .offline .dot { background: #e0554b; box-shadow: 0 0 10px #e0554b; }
+  .badge {
+    display: inline-block; margin-left: 12px; padding: 1px 7px; font: 600 10.5px Orbitron, monospace;
+    letter-spacing: .12em; color: #001018; background: var(--cyan); box-shadow: 0 0 10px var(--cyan-soft);
+  }
+  .fs {
+    margin-left: 14px; padding: 2px 8px; font-size: 14px; color: var(--text); cursor: pointer;
+    border: 1px solid var(--line); background: transparent; font-family: inherit;
+  }
+  .fs:hover { border-color: var(--cyan); color: #fff; }
+
+  /* ---------- hai cột bên ---------- */
+  .panel {
+    position: fixed; top: 64px; bottom: 236px; width: 270px; z-index: 2;
+    font-size: 13px; letter-spacing: .05em; display: flex; flex-direction: column; gap: 18px;
+    overflow: hidden;
+  }
+  .panel h3 {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 11.5px; font-weight: 500; letter-spacing: .32em; color: var(--cyan);
+    padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--line);
+  }
+  .panel h3 small { font-size: 9.5px; letter-spacing: .12em; color: var(--muted); }
+  .left { left: 26px; }
+  .right { right: 26px; }
+
+  .quote {
+    display: grid; grid-template-columns: 1fr auto 62px; align-items: baseline; gap: 10px;
+    padding: 5px 0; border-bottom: 1px dashed rgba(150, 215, 255, .07);
+  }
+  .quote .sym { font-weight: 600; letter-spacing: .14em; color: var(--text); font-size: 12px; }
+  .quote .px { font-family: Orbitron, monospace; font-size: 12px; color: #ecfaff; text-align: right; }
+  .quote .ch { font-family: Orbitron, monospace; font-size: 10.5px; text-align: right; }
+  .up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--muted); }
+  .quote.flash-up .px { animation: fu .9s; } .quote.flash-down .px { animation: fd .9s; }
+  @keyframes fu { 0% { color: var(--up); text-shadow: 0 0 10px var(--up); } }
+  @keyframes fd { 0% { color: var(--down); text-shadow: 0 0 10px var(--down); } }
+
+  .event { padding: 6px 0 7px; border-bottom: 1px dashed rgba(150, 215, 255, .07); }
+  .event .when { display: flex; justify-content: space-between; font-size: 10.5px; letter-spacing: .1em; color: var(--muted); }
+  .event .when b { color: var(--amber); font-weight: 500; font-family: Orbitron, monospace; font-size: 10px; }
+  .event .what { margin-top: 2px; color: var(--text); font-size: 12.5px; }
+  .event .fp { font-size: 10.5px; color: var(--muted); letter-spacing: .06em; }
+  .empty { font-style: italic; color: var(--muted); font-size: 12px; }
+
+  .row { display: flex; justify-content: space-between; margin: 8px 0 4px; color: var(--muted); font-size: 12px; }
+  .row .num { font-family: Orbitron, monospace; font-size: 11px; color: var(--text); }
+  .bar { height: 3px; background: rgba(255, 255, 255, .07); }
+  .bar i {
+    display: block; height: 100%; width: 0; background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan); transition: width .8s ease;
+  }
+  .log { overflow-y: auto; scrollbar-width: none; }
+  .log p { margin-bottom: 12px; line-height: 1.45; color: var(--muted); user-select: text; }
+  .log p.ai { color: var(--text); }
+  .log p b { display: block; font-weight: 500; font-size: 10.5px; letter-spacing: .28em; color: var(--cyan); }
+
+  /* ---------- lõi giữa ---------- */
+  .core { position: fixed; transform: translate(-50%, -50%); text-align: center; pointer-events: none; z-index: 2; }
+  .core .name { font-family: Orbitron; font-size: 12px; letter-spacing: .6em; margin-left: .6em; color: var(--cyan); }
+  .core .time {
+    font-family: Orbitron; font-weight: 700; font-size: clamp(30px, 5.6vmin, 62px); line-height: 1.15;
+    color: #ecfaff; text-shadow: 0 0 22px var(--cyan-soft);
+  }
+  .core .date { font-size: 11.5px; letter-spacing: .38em; margin-left: .38em; color: var(--muted); }
+
+  .btn {
+    position: fixed; transform: translate(-50%, -50%); z-index: 3;
+    min-width: 104px; padding: 8px 14px; text-align: center;
+    font: 500 11.5px "Chakra Petch", sans-serif; letter-spacing: .16em; color: var(--text);
+    background: var(--glass); border: 1px solid var(--line); cursor: pointer;
+    clip-path: polygon(9px 0, 100% 0, calc(100% - 9px) 100%, 0 100%);
+    transition: background .2s, color .2s, box-shadow .2s;
+  }
+  .btn:hover { color: #fff; background: rgba(31, 210, 255, .16); box-shadow: inset 0 0 16px rgba(31, 210, 255, .35); }
+  .btn.fire, .chip.fire { background: rgba(31, 210, 255, .55); color: #001018; }
+
+  /* ---------- trạng thái + ô gõ lệnh ---------- */
+  .status {
+    position: fixed; left: 50%; bottom: 124px; transform: translateX(-50%); z-index: 2;
+    width: min(820px, 92vw); text-align: center;
+  }
+  .status .label { font-weight: 600; font-size: 13px; letter-spacing: .42em; margin-left: .42em; color: var(--cyan); }
+  .status .said { margin-top: 10px; font-size: 18px; min-height: 1.45em; color: var(--text); }
+  .status .reply {
+    margin-top: 6px; font-size: 14.5px; min-height: 1.45em; color: var(--muted); user-select: text;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .status .note { color: var(--amber); }
+
+  .dock {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 3;
+    width: min(820px, 92vw);
+  }
+  .chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .chips .lbl { font-size: 10.5px; letter-spacing: .3em; color: var(--muted); align-self: center; margin-right: 4px; }
+  .chip {
+    padding: 4px 12px; font: 500 10.5px "Chakra Petch", sans-serif; letter-spacing: .18em;
+    color: var(--text); background: var(--glass); border: 1px solid var(--line); cursor: pointer;
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); transition: background .2s, color .2s;
+  }
+  .chip:hover { background: rgba(31, 210, 255, .16); color: #fff; }
+  form.cmd {
+    display: flex; align-items: center; gap: 12px; padding: 0 8px 0 18px; height: 46px;
+    background: linear-gradient(90deg, rgba(6, 18, 26, .85), rgba(6, 24, 34, .7));
+    border: 1px solid var(--line); box-shadow: inset 0 0 22px rgba(31, 210, 255, .06);
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  form.cmd:focus-within { border-color: var(--cyan); box-shadow: inset 0 0 26px rgba(31, 210, 255, .18), 0 0 18px rgba(31, 210, 255, .12); }
+  form.cmd .prompt { font: 700 13px Orbitron, monospace; color: var(--cyan); }
+  form.cmd input {
+    flex: 1; background: transparent; border: 0; outline: 0; color: #ecfaff;
+    font: 400 15.5px "Chakra Petch", sans-serif; letter-spacing: .03em; user-select: text;
+  }
+  form.cmd input::placeholder { color: var(--muted); }
+  form.cmd button {
+    padding: 7px 16px; font: 600 11px "Chakra Petch", sans-serif; letter-spacing: .24em; cursor: pointer;
+    color: #001018; background: var(--cyan); border: 0;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+  form.cmd.sent { border-color: var(--up); }
+
+  .alert {
+    position: fixed; top: 58px; left: 50%; transform: translateX(-50%); z-index: 4; display: none;
+    max-width: min(860px, 92vw); padding: 10px 18px; font-size: 14px; letter-spacing: .03em;
+    color: #ffd9d4; background: rgba(120, 20, 15, .55); border: 1px solid rgba(255, 110, 95, .6);
+  }
+  .alert.on { display: block; }
+  @media (max-width: 1250px) { .panel { display: none; } }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<canvas id="hud"></canvas>
+
+<div class="top" id="top">
+  <div><span class="dot"></span><b id="topName">DU</b> · <span id="topState">ĐANG KẾT NỐI</span><span class="badge" id="lang">VI</span></div>
+  <div><span id="topDate"></span> · <span class="num" id="topClock"></span></div>
+  <div>CPU <span class="num" id="topCpu">–</span> · RAM <span class="num" id="topRam">–</span> · PIN <span class="num" id="topBat">–</span> · <span id="topLearnBox" title="Số thứ đã tự học: chữ hay nghe nhầm, cách gọi tên, từ quen">HỌC <span class="num" id="topLearn">–</span></span><button class="fs" id="fs" title="Toàn màn hình (hoặc nhấp đúp vào HUD)">⛶</button></div>
+</div>
+
+<section class="panel left">
+  <div>
+    <h3>THỊ TRƯỜNG <small id="mktTime">–</small></h3>
+    <div id="markets"><p class="empty">Đang tải giá…</p></div>
+  </div>
+  <div>
+    <h3>TIN MỸ SẮP RA <small>TÁC ĐỘNG MẠNH</small></h3>
+    <div id="events"><p class="empty">Đang tải lịch tin…</p></div>
+  </div>
+  <div>
+    <h3>HỆ THỐNG</h3>
+    <div class="row"><span>CPU</span><span class="num" id="cpu">–</span></div><div class="bar"><i id="cpuBar"></i></div>
+    <div class="row"><span>BỘ NHỚ</span><span class="num" id="ram">–</span></div><div class="bar"><i id="ramBar"></i></div>
+    <div class="row"><span>MẠNG ↑ / ↓</span><span class="num" id="net">–</span></div>
+  </div>
+</section>
+
+<section class="panel right">
+  <h3>NHẬT KÝ</h3>
+  <div class="log" id="log"><p class="empty">Chưa có cuộc trò chuyện nào.</p></div>
+</section>
+
+<div class="alert" id="alert"></div>
+
+<div class="core" id="core">
+  <div class="name" id="coreName">DU</div>
+  <div class="time" id="coreTime">--:--</div>
+  <div class="date" id="coreDate"></div>
+</div>
+
+<div class="status">
+  <div class="label" id="label">ĐANG KẾT NỐI…</div>
+  <div class="said" id="said"></div>
+  <div class="reply" id="reply"></div>
+</div>
+
+<div class="dock">
+  <div class="chips" id="chips"><span class="lbl">NHẠC</span></div>
+  <form class="cmd" id="cmd" autocomplete="off">
+    <span class="prompt">›</span>
+    <input id="cmdText" placeholder="Gõ lệnh hoặc câu hỏi rồi Enter… (không cần gọi tên)" maxlength="500">
+    <button type="submit">GỬI</button>
+  </form>
+</div>
+
+<script>
+  const TOKEN = "__TOKEN__";
+  const WEEKDAYS = ["CHỦ NHẬT", "THỨ HAI", "THỨ BA", "THỨ TƯ", "THỨ NĂM", "THỨ SÁU", "THỨ BẢY"];
+  // Độ sáng mục tiêu của vòng cho từng trạng thái.
+  const GLOW = { offline: .06, idle: .38, awake: .62, listening: .8, thinking: .78, researching: .85, speaking: .72 };
+  const SPEED = { offline: .05, idle: .22, awake: .4, listening: .7, thinking: 2.6, researching: 1.6, speaking: .55 };
+
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("hud"), ctx = canvas.getContext("2d");
+  let W, H, R, cx, cy;
+  let state = { status: "offline" }, fails = 0, buttonsBuilt = false, chipsBuilt = false;
+  let lastLog = "", lastMarkets = "", lastPrices = {}, session = null;
+  let glow = .2, spinA = 0, spinB = 0, level = 0, lastTs = 0;
+
+  // ---------- gửi lệnh (nút, nút nhạc, ô gõ) ----------
+  function send(text) {
+    return fetch("/command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Tom-Token": TOKEN },
+      body: JSON.stringify({ text }),
+    }).catch(() => {});
+  }
+
+  $("cmd").onsubmit = (e) => {
+    e.preventDefault();
+    const box = $("cmdText"), text = box.value.trim();
+    if (!text) return;
+    send(text); box.value = "";
+    $("cmd").classList.add("sent"); setTimeout(() => $("cmd").classList.remove("sent"), 500);
+  };
+  // Gõ phím bất kỳ ở đâu trên HUD là chữ tự vào ô lệnh; Esc để bỏ.
+  addEventListener("keydown", (e) => {
+    const box = $("cmdText");
+    if (e.key === "Escape") { box.value = ""; box.blur(); return; }
+    if (document.activeElement !== box && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) box.focus();
+  });
+
+  // ---------- bố cục ----------
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    W = innerWidth; H = innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + "px"; canvas.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const top = 46, bottom = 236;
+    R = Math.max(110, Math.min(W * .3, (H - top - bottom) / 2 - 6));
+    cx = W / 2; cy = top + (H - top - bottom) / 2;
+    Object.assign($("core").style, { left: cx + "px", top: cy + "px" });
+    placeButtons();
+  }
+
+  function placeButtons() {
+    const buttons = [...document.querySelectorAll(".btn")];
+    const half = Math.ceil(buttons.length / 2);
+    buttons.forEach((b, i) => {
+      // Nửa đầu bên trái, nửa sau bên phải, xếp theo cung tròn như HUD trong phim.
+      const side = i < half ? 0 : 1, k = side ? i - half : i, n = side ? buttons.length - half : half;
+      const spread = Math.min(80, 22 * n), deg = (k - (n - 1) / 2) * (spread / Math.max(n - 1, 1));
+      const angle = (side ? deg : 180 - deg) * Math.PI / 180;
+      b.style.left = cx + Math.cos(angle) * R * .9 + "px";
+      b.style.top = cy + Math.sin(angle) * R * .9 + "px";
+    });
+  }
+
+  function fire(el, command) {
+    el.classList.add("fire"); setTimeout(() => el.classList.remove("fire"), 350);
+    send(command);
+  }
+
+  function buildButtons(list) {
+    list.forEach(([label, command]) => {
+      const b = document.createElement("div");
+      b.className = "btn"; b.textContent = label; b.title = command;
+      b.onclick = () => fire(b, command);
+      document.body.appendChild(b);
+    });
+    buttonsBuilt = true; placeButtons();
+  }
+
+  function buildChips(list) {
+    list.forEach(([label, genre]) => {
+      const c = document.createElement("div");
+      c.className = "chip"; c.textContent = label;
+      c.onclick = () => fire(c, (state.lang === "en" ? "play some " : "mở nhạc ") + genre);
+      $("chips").appendChild(c);
+    });
+    chipsBuilt = true;
+  }
+
+  // ---------- vẽ ----------
+  function band(r1, r2, a1, a2, slant = 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r2, a1 + slant, a2 + slant);
+    ctx.arc(cx, cy, r1, a2, a1, true);
+    ctx.closePath();
+  }
+
+  function circle(r, color, width = 1, dash = []) {
+    ctx.beginPath(); ctx.setLineDash(dash); ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  function frame(ts) {
+    const dt = Math.min((ts - lastTs) / 1000 || 0, .1); lastTs = ts;
+    const t = ts / 1000;
+    const mode = state.status === "offline" ? "offline" : state.hearing ? "listening" : state.status;
+    level += ((state.level || 0) - level) * .35;
+    const voice = mode === "listening" ? Math.min(.25 + level / .03, 1)
+      : mode === "speaking" ? (.55 + .45 * Math.sin(t * 11)) * (.6 + .4 * Math.sin(t * 3.1)) : 0;
+    glow += ((GLOW[mode] ?? .38) + voice * .2 - glow) * Math.min(dt * 5, 1);
+    spinA += (SPEED[mode] ?? .2) * dt;
+    spinB -= (SPEED[mode] ?? .2) * dt * .55;
+
+    ctx.clearRect(0, 0, W, H);
+    const g = glow, cyan = (a) => `rgba(31, 210, 255, ${a})`, white = (a) => `rgba(225, 248, 255, ${a})`;
+
+    // Vòng ngoài cùng: đường mảnh, vài cung dày và cụm vạch.
+    circle(R * 1.04, white(.07));
+    circle(R * .99, white(.12));
+    ctx.lineWidth = 2.2; ctx.strokeStyle = white(.18 + g * .25);
+    for (const [a, b] of [[.08, .42], [.9, 1.12], [1.38, 1.78]]) {
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.04, (a + spinB * .15) * Math.PI, (b + spinB * .15) * Math.PI); ctx.stroke();
+    }
+    for (let i = 0; i < 48; i++) {
+      const a = i / 48 * Math.PI * 2 + spinB * .15, len = i % 4 ? 5 : 11;
+      ctx.strokeStyle = white(i % 4 ? .1 : .22); ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * R * 1.07, cy + Math.sin(a) * R * 1.07);
+      ctx.lineTo(cx + Math.cos(a) * (R * 1.07 + len), cy + Math.sin(a) * (R * 1.07 + len));
+      ctx.stroke();
+    }
+
+    // Vành ô vuông (chỗ đặt nút).
+    circle(R * .8, white(.1)); circle(R * .97, white(.08));
+    for (let i = 0; i < 28; i++) {
+      const a = i / 28 * Math.PI * 2;
+      band(R * .82, R * .95, a + .02, a + Math.PI * 2 / 28 - .02);
+      ctx.strokeStyle = white(.06); ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    // Sóng âm quanh vòng khi đang nghe hoặc đang nói.
+    if (voice > .01) {
+      ctx.lineWidth = 2; ctx.lineCap = "round";
+      for (let i = 0; i < 96; i++) {
+        const a = i / 96 * Math.PI * 2;
+        const wobble = .35 + .65 * Math.abs(Math.sin(i * 1.7 + t * 7) * Math.cos(i * .6 - t * 4.3));
+        const len = R * .11 * voice * wobble;
+        ctx.strokeStyle = cyan(.35 + .5 * wobble);
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * R * .69, cy + Math.sin(a) * R * .69);
+        ctx.lineTo(cx + Math.cos(a) * (R * .69 + len), cy + Math.sin(a) * (R * .69 + len));
+        ctx.stroke();
+      }
+      ctx.lineCap = "butt";
+    }
+
+    // Vành vạch trắng nghiêng, xoay chậm.
+    ctx.save();
+    ctx.shadowColor = cyan(.9); ctx.shadowBlur = 6 + 10 * g;
+    ctx.fillStyle = white(.22 + g * .68);
+    for (let i = 0; i < 48; i++) {
+      const a = i / 48 * Math.PI * 2 + spinA * .5;
+      band(R * .565, R * .645, a, a + Math.PI * 2 / 48 * .42, .045);
+      ctx.fill();
+    }
+    ctx.restore();
+    circle(R * .665, cyan(.18 + .25 * g));
+
+    // Vòng sáng chính.
+    ctx.save();
+    ctx.shadowColor = cyan(1); ctx.shadowBlur = 18 + 42 * g;
+    band(R * .48, R * .555, 0, Math.PI * 2);
+    const grad = ctx.createRadialGradient(cx, cy, R * .46, cx, cy, R * .56);
+    grad.addColorStop(0, cyan(.1 + .2 * g)); grad.addColorStop(.6, cyan(.35 + .55 * g)); grad.addColorStop(1, cyan(.15 + .3 * g));
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.restore();
+    for (let i = 0; i < 180; i++) {
+      const a = i / 180 * Math.PI * 2 + spinB;
+      ctx.strokeStyle = white(i % 10 ? .18 : .55); ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * R * .49, cy + Math.sin(a) * R * .49);
+      ctx.lineTo(cx + Math.cos(a) * R * (i % 10 ? .52 : .545), cy + Math.sin(a) * R * (i % 10 ? .52 : .545));
+      ctx.stroke();
+    }
+
+    // Vòng chấm bên trong + cung đo: mức micro khi nghe, vòng quay khi suy nghĩ.
+    for (let i = 0; i < 72; i++) {
+      const a = i / 72 * Math.PI * 2 - spinA * .3;
+      ctx.fillStyle = white(i % 6 ? .18 : .45);
+      ctx.beginPath(); ctx.arc(cx + Math.cos(a) * R * .4, cy + Math.sin(a) * R * .4, i % 6 ? 1 : 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+    circle(R * .44, white(.08));
+    ctx.lineWidth = 3; ctx.strokeStyle = cyan(.85); ctx.shadowColor = cyan(1); ctx.shadowBlur = 12;
+    ctx.beginPath();
+    if (mode === "thinking" || mode === "researching") ctx.arc(cx, cy, R * .44, spinA * 2, spinA * 2 + Math.PI * .5);
+    else if (voice > .01) ctx.arc(cx, cy, R * .44, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * voice);
+    ctx.stroke(); ctx.shadowBlur = 0;
+
+    // Lõi giữa.
+    circle(R * .3, white(.16));
+    circle(R * .265, white(.12), 1, [3, 6]);
+    const notch = -Math.PI / 2 + spinA * 1.2;
+    ctx.fillStyle = cyan(.6 + .4 * g);
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(notch) * R * .31, cy + Math.sin(notch) * R * .31);
+    ctx.lineTo(cx + Math.cos(notch - .06) * R * .345, cy + Math.sin(notch - .06) * R * .345);
+    ctx.lineTo(cx + Math.cos(notch + .06) * R * .345, cy + Math.sin(notch + .06) * R * .345);
+    ctx.fill();
+
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- dữ liệu ----------
+  const names = (s) => (s.names && s.names.length ? s.names : [s.name || "DU"]);
+  const LABELS = {
+    offline: () => "TRỢ LÝ ĐANG TẮT",
+    idle: (s) => {
+      const n = names(s);
+      return n.length > 1 ? `NÓI “${n[0].toUpperCase()} ƠI” HOẶC “HEY ${n[n.length - 1].toUpperCase()}”`
+                          : `NÓI “${n[0].toUpperCase()} ƠI” ĐỂ GỌI`;
+    },
+    awake: () => "ĐANG CHỜ BẠN NÓI TIẾP",
+    listening: () => "ĐANG NGHE…",
+    thinking: () => "ĐANG XỬ LÝ…",
+    researching: () => "ĐANG NGHIÊN CỨU NHIỀU NGUỒN…",
+    speaking: (s) => `${(s.name || "DU").toUpperCase()} ĐANG NÓI`,
+  };
+
+  function fmtPrice(v) {
+    if (v == null) return "–";
+    const d = v >= 1000 ? 2 : v >= 10 ? 2 : 4;
+    return v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function renderMarkets(s) {
+    const rows = s.markets || [];
+    const key = JSON.stringify(rows);
+    if (key === lastMarkets) return;
+    lastMarkets = key;
+    const box = $("markets"); box.innerHTML = "";
+    if (!rows.length) { box.innerHTML = '<p class="empty">Đang tải giá…</p>'; return; }
+    for (const r of rows) {
+      const div = document.createElement("div"), ch = r.change;
+      div.className = "quote";
+      const prev = lastPrices[r.name];
+      if (prev != null && r.price != null && r.price !== prev) div.classList.add(r.price > prev ? "flash-up" : "flash-down");
+      lastPrices[r.name] = r.price;
+      const cls = ch == null ? "flat" : ch > 0 ? "up" : ch < 0 ? "down" : "flat";
+      div.innerHTML = `<span class="sym"></span><span class="px"></span><span class="ch ${cls}"></span>`;
+      div.children[0].textContent = r.name;
+      div.children[1].textContent = r.error ? "lỗi" : fmtPrice(r.price);
+      div.children[2].textContent = ch == null ? "" : (ch > 0 ? "▲ " : ch < 0 ? "▼ " : "") + Math.abs(ch).toFixed(2) + "%";
+      box.append(div);
+    }
+    const d = new Date(), p = (n) => String(n).padStart(2, "0");
+    $("mktTime").textContent = `CẬP NHẬT ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  function renderEvents(s) {
+    const box = $("events"), list = s.events || [];
+    if (!list.length) { box.innerHTML = '<p class="empty">Không có tin mạnh nào sắp ra tuần này.</p>'; return; }
+    box.innerHTML = "";
+    const now = Date.now() / 1000;
+    for (const e of list) {
+      const left = Math.max(0, e.ts - now), h = Math.floor(left / 3600), m = Math.floor(left % 3600 / 60);
+      const div = document.createElement("div"); div.className = "event";
+      div.innerHTML = '<div class="when"><span></span><b></b></div><div class="what"></div><div class="fp"></div>';
+      div.querySelector(".when span").textContent = e.time_local;
+      div.querySelector(".when b").textContent = left < 60 ? "ĐANG RA" : h >= 24 ? `${Math.floor(h / 24)}N ${h % 24}G` : `${h}G ${m}P`;
+      div.querySelector(".what").textContent = e.title;
+      div.querySelector(".fp").textContent = [e.forecast && `Dự báo ${e.forecast}`, e.previous && `Kỳ trước ${e.previous}`].filter(Boolean).join(" · ");
+      box.append(div);
+    }
+  }
+
+  function render() {
+    const s = state, mode = s.status === "offline" ? "offline" : s.hearing ? "listening" : s.status;
+    const name = (s.name || "DU").toUpperCase();
+    $("top").classList.toggle("offline", mode === "offline");
+    $("topName").textContent = $("coreName").textContent = name;
+    document.title = `${names(s).join(" · ").toUpperCase()} HUD`;
+    $("lang").textContent = (s.lang || "vi").toUpperCase();
+    $("topState").textContent = mode === "offline" ? "NGOẠI TUYẾN" : "TRỰC TUYẾN";
+    $("label").textContent = (LABELS[mode] || LABELS.idle)(s);
+    $("said").textContent = s.heard ? `“${s.heard}”` : "";
+    // Câu "nghe được nhưng chưa gọi tên" hiện 6 giây thay cho câu trả lời.
+    const showNote = s.note && Date.now() / 1000 - (s.note_at || 0) < 6;
+    $("reply").textContent = showNote ? s.note : (s.reply || "");
+    $("reply").classList.toggle("note", !!showNote);
+    $("alert").textContent = s.problem ? "⚠ " + s.problem : "";
+    $("alert").classList.toggle("on", !!s.problem);
+    if (s.background && !$("bg").classList.contains("on")) {
+      $("bg").style.backgroundImage = "url(/background)"; $("bg").classList.add("on");
+    }
+    if (s.buttons && !buttonsBuilt) buildButtons(s.buttons);
+    if (s.genres && !chipsBuilt) buildChips(s.genres);
+    $("cmdText").placeholder = s.lang === "en"
+      ? "Type a command or question, then Enter… (no wake word needed)"
+      : "Gõ lệnh hoặc câu hỏi rồi Enter… (không cần gọi tên)";
+
+    const sys = s.sys || {};
+    const pct = (v) => v == null ? "–" : v + "%";
+    $("cpu").textContent = $("topCpu").textContent = pct(sys.cpu);
+    $("ram").textContent = $("topRam").textContent = pct(sys.ram);
+    $("topBat").textContent = sys.battery == null ? "–" : sys.battery + "%" + (sys.plugged ? " ⚡" : "");
+    $("cpuBar").style.width = (sys.cpu || 0) + "%";
+    $("ramBar").style.width = (sys.ram || 0) + "%";
+    $("net").textContent = sys.up == null ? "–" : `${sys.up} / ${sys.down} KB/s`;
+    const L = s.learned;
+    $("topLearn").textContent = L ? L.fixes + L.wake + L.words : "–";
+    if (L) $("topLearnBox").title = `Đã tự học: ${L.fixes} chữ hay nghe nhầm, ${L.wake} cách gọi tên, ${L.words} từ quen`;
+
+    renderMarkets(s);
+    renderEvents(s);
+
+    const logKey = JSON.stringify(s.log || []);
+    if (logKey !== lastLog) {
+      lastLog = logKey;
+      const box = $("log"); box.innerHTML = "";
+      if (!(s.log || []).length) box.innerHTML = '<p class="empty">Chưa có cuộc trò chuyện nào.</p>';
+      for (const [who, text] of (s.log || []).slice(-8)) {
+        const p = document.createElement("p"), b = document.createElement("b");
+        p.className = who === "Bạn" ? "" : "ai"; b.textContent = who.toUpperCase();
+        p.append(b, text); box.append(p);
+      }
+      box.scrollTop = box.scrollHeight;
+    }
+  }
+
+  async function poll() {
+    try {
+      const r = await fetch("/state", { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      state = await r.json(); fails = 0;
+      // Trợ lý vừa được bật lại: tải lại trang để nhận mã bấm nút mới.
+      if (session && state.session && state.session !== session) return location.reload();
+      session = state.session || session;
+    } catch {
+      if (++fails > 4) state = { ...state, status: "offline", hearing: false, level: 0 };
+    }
+    render();
+    // Tab đang ẩn thì hỏi chậm lại, vẫn đủ để trợ lý biết tab còn mở.
+    setTimeout(poll, document.hidden ? 1000 : 120);
+  }
+
+  function clock() {
+    const d = new Date(), p = (n) => String(n).padStart(2, "0");
+    const hm = `${p(d.getHours())}:${p(d.getMinutes())}`;
+    $("coreTime").textContent = hm;
+    $("topClock").textContent = `${hm}:${p(d.getSeconds())}`;
+    $("topDate").textContent = `${WEEKDAYS[d.getDay()]} ${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+    $("coreDate").textContent = `${p(d.getDate())} THG ${d.getMonth() + 1}`;
+  }
+
+  // Toàn màn hình: nút ⛶ trên thanh trên cùng hoặc nhấp đúp vào chỗ trống.
+  function toggleFullscreen() {
+    const el = document.documentElement;
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    }
+  }
+  $("fs").onclick = toggleFullscreen;
+  addEventListener("dblclick", (e) => { if (!e.target.closest(".btn, .fs, .chip, .dock, .panel, .status")) toggleFullscreen(); });
+
+  addEventListener("resize", resize);
+  resize(); clock(); setInterval(clock, 1000);
+  requestAnimationFrame(frame); poll();
+</script>
+</body>
+</html>

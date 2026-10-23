@@ -1,0 +1,11 @@
+numpy
+sounddevice
+soundfile
+faster-whisper
+edge-tts
+anthropic
+google-genai
+psutil
+truststore
+websockets
+mlx-whisper; sys_platform == "darwin"
