@@ -149,7 +149,8 @@ function kiemTra() {
   };
   thu("gia", function () { return layGia(["XAUUSD", "US100", "BTC", "DXY", "US10Y"]); });
   thu("vang_vn", function () { return vangVN(); });
-  thu("lich_tin", function () { return lichTin("USD", "").length; });
+  thu("lich_tradingview", function () { return lichTradingView("USD").length; });
+  thu("lich_forexfactory", function () { return lichForexFactory("USD").length; });
   thu("tin_quoc_te", function () { return tinTuc("", 3, "en").length; });
   thu("tin_vn", function () { return tinTuc("lãi suất ngân hàng", 3, "vi", 2).length; });
   thu("tim_web", function () { return timWeb("US CPI September 2026").length; });
@@ -572,10 +573,30 @@ function lichTradingView(country) {
   });
 }
 
+// Forex Factory hay chặn máy chủ Google (HTTP 429): hỏi ít (6 giờ một lần), và lưu bản tốt gần nhất
+// (tin quan trọng của các đồng tiền chính, đủ nhỏ để lưu) để dùng khi bị chặn.
+const FF_MAJOR = ["USD", "EUR", "GBP", "JPY", "CNY", "AUD", "CAD", "CHF", "NZD"];
+
 function lichForexFactory(country) {
-  const events = nho("lich_ff", 900, function () {
-    return JSON.parse(lay("https://nfs.faireconomy.media/ff_calendar_thisweek.json"));
-  });
+  const props = PropertiesService.getScriptProperties();
+  let events;
+  try {
+    events = nho("lich_ff", 6 * 3600, function () {
+      const keep = JSON.parse(lay("https://nfs.faireconomy.media/ff_calendar_thisweek.json")).filter(function (e) {
+        return (e.impact === "High" || e.impact === "Medium") && FF_MAJOR.indexOf(e.country) >= 0;
+      }).map(function (e) {
+        return { title: e.title, country: e.country, impact: e.impact, date: e.date, forecast: e.forecast, previous: e.previous };
+      });
+      const text = JSON.stringify(keep);
+      if (text.length < 8500) props.setProperty("lich_ff_du_phong", text);
+      return keep;
+    });
+  } catch (err) {
+    const saved = props.getProperty("lich_ff_du_phong");
+    if (!saved) throw err;
+    console.error("Forex Factory lỗi, dùng bản đã lưu: " + err);
+    events = JSON.parse(saved);
+  }
   return events.filter(function (e) {
     return !country || String(e.country).toUpperCase() === country.toUpperCase();
   }).map(function (e) {
